@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RotBlock Settings</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <h1>RotBlock Settings</h1>
+  
+  <div class="setting">
+    <label for="minViews">Minimum View Count:</label>
+    <input type="number" id="minViews" name="minViews" min="0">
+    <small> (e.g., 10000)</small>
+  </div>
+  
+  <div class="setting">
+    <label for="minDuration">Minimum Duration (seconds):</label>
+    <input type="number" id="minDuration" name="minDuration" min="0">
+    <small>(e.g., 120 for 2 minutes)</small>
+  </div>
+
+  <div class="setting checkbox-setting">
+    <input type="checkbox" id="hideShorts" name="hideShorts">
+    <label for="hideShorts">Hide YouTube Shorts</label>
+  </div>
+  
+  <button id="saveSettings">Save Settings</button>
+  <div id="statusMessage" style="margin-top: 10px; font-weight: bold;"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

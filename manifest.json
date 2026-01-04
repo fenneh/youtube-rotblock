@@ -3,6 +3,15 @@
   "name": "YouTube RotBlock",
   "version": "1.0",
   "description": "Filter YouTube videos by view count, duration, keywords, and customize your feed.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "youtube-rotblock@fenneh.github.io",
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
   "permissions": [
     "storage",
     "activeTab",

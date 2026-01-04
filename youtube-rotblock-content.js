@@ -36,22 +36,6 @@ function findAllVideos() {
   return Array.from(document.querySelectorAll(selector));
 }
 
-function findMutationVideos(mutations) {
-  const selector = getVideoSelectorByPath();
-  const videos = [];
-  mutations.forEach(mutation => {
-    mutation.addedNodes.forEach(node => {
-      if (node.nodeType === 1 && node.matches && node.matches(selector)) {
-        videos.push(node);
-      }
-      if (node.nodeType === 1 && node.querySelectorAll) {
-        node.querySelectorAll(selector).forEach(el => videos.push(el));
-      }
-    });
-  });
-  return videos;
-}
-
 async function loadSettings() {
   try {
     const settings = await browser.storage.local.get({
@@ -310,7 +294,7 @@ let debounceTimer = null;
 function startObserving() {
   if (domObserver) return;
 
-  domObserver = new MutationObserver((mutations) => {
+  domObserver = new MutationObserver(() => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       processAllVideos();
@@ -318,13 +302,6 @@ function startObserving() {
   });
 
   domObserver.observe(document.body, { childList: true, subtree: true });
-}
-
-function stopObserving() {
-  if (domObserver) {
-    domObserver.disconnect();
-    domObserver = null;
-  }
 }
 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {

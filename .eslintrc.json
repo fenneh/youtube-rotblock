@@ -1,0 +1,13 @@
+{
+  "env": {
+    "browser": true,
+    "webextensions": true,
+    "es2021": true
+  },
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  },
+  "rules": {
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+  }
+}

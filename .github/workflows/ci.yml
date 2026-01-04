@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install ESLint
+        run: npm install eslint@latest
+
+      - name: Run ESLint
+        run: npx eslint --env browser,webextensions youtube-rotblock-*.js
+
+  package:
+    runs-on: ubuntu-latest
+    needs: lint
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create extension package
+        run: |
+          zip -r youtube-rotblock.zip \
+            manifest.json \
+            youtube-rotblock-*.js \
+            popup.html \
+            popup.css \
+            icons/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: youtube-rotblock-extension
+          path: youtube-rotblock.zip

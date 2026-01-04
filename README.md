@@ -1,5 +1,11 @@
 # YouTube RotBlock
 
+[![CI](https://github.com/fenneh/youtube-rotblock/actions/workflows/ci.yml/badge.svg)](https://github.com/fenneh/youtube-rotblock/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Firefox](https://img.shields.io/badge/Firefox-supported-orange.svg)](https://www.mozilla.org/firefox/)
+[![Chrome](https://img.shields.io/badge/Chrome-supported-green.svg)](https://www.google.com/chrome/)
+[![Edge](https://img.shields.io/badge/Edge-supported-blue.svg)](https://www.microsoft.com/edge)
+
 A browser extension for filtering YouTube content based on user-defined criteria.
 
 ## Features

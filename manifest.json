@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "RotBlock",
+  "name": "YouTube RotBlock",
   "version": "1.0",
-  "description": "Filter YouTube videos based on view count, duration, and hide shorts.",
+  "description": "Filter YouTube videos by view count, duration, keywords, and customize your feed.",
   "permissions": [
     "storage",
     "activeTab",
@@ -13,12 +13,13 @@
     "*://*.youtube.com/*"
   ],
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["youtube-rotblock-background.js"],
+    "service_worker": "youtube-rotblock-background.js"
   },
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/*"],
-      "js": ["content.js"],
+      "js": ["youtube-rotblock-content.js"],
       "run_at": "document_idle"
     }
   ],

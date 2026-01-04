@@ -1,0 +1,6 @@
+.claude/
+*.zip
+*.xpi
+*.crx
+.DS_Store
+Thumbs.db

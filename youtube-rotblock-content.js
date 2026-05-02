@@ -38,19 +38,7 @@ function findAllVideos() {
 
 async function loadSettings() {
   try {
-    const settings = await browser.storage.local.get({
-      minViews: 10000,
-      minDuration: 120,
-      videosPerRow: 0,
-      blockedKeywords: '',
-      hideShorts: true,
-      hideBreakingNews: false,
-      hideLatestPosts: false,
-      hideLatestVideos: false,
-      hidePeopleSearch: false,
-      hideExploreTopics: false,
-      hideAllShelves: false
-    });
+    const settings = await browser.storage.local.get(config);
     config = settings;
     return true;
   } catch (err) {

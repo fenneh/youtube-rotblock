@@ -1,6 +1,6 @@
 # YouTube RotBlock
 
-[![CI](https://github.com/fenneh/youtube-rotblock/actions/workflows/ci.yml/badge.svg)](https://github.com/fenneh/youtube-rotblock/actions/workflows/ci.yml)
+[![CI](https://github.com/fenneh/RotBlock/actions/workflows/ci.yml/badge.svg)](https://github.com/fenneh/RotBlock/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Firefox](https://img.shields.io/badge/Firefox-supported-orange.svg)](https://www.mozilla.org/firefox/)
 [![Chrome](https://img.shields.io/badge/Chrome-supported-green.svg)](https://www.google.com/chrome/)

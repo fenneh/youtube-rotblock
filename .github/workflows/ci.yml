@@ -26,6 +26,9 @@ jobs:
       - name: Run ESLint
         run: npx eslint youtube-rotblock-*.js
 
+      - name: Run tests
+        run: node --test
+
   package:
     runs-on: ubuntu-latest
     needs: lint

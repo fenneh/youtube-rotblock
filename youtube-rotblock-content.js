@@ -292,18 +292,6 @@ function startObserving() {
   domObserver.observe(document.body, { childList: true, subtree: true });
 }
 
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'settingsUpdated') {
-    config = message.settings;
-    document.querySelectorAll('.rotblock-hidden').forEach(el => {
-      el.classList.remove('rotblock-hidden');
-    });
-    processAllVideos();
-    sendResponse({ success: true });
-  }
-  return true;
-});
-
 async function init() {
   if (location.hostname !== 'www.youtube.com') return;
 
@@ -313,12 +301,30 @@ async function init() {
   startObserving();
 }
 
-window.addEventListener('yt-navigate-finish', () => {
-  processAllVideos();
-});
+if (typeof window !== 'undefined') {
+  browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'settingsUpdated') {
+      config = message.settings;
+      document.querySelectorAll('.rotblock-hidden').forEach(el => {
+        el.classList.remove('rotblock-hidden');
+      });
+      processAllVideos();
+      sendResponse({ success: true });
+    }
+    return true;
+  });
 
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  init();
-} else {
-  document.addEventListener('DOMContentLoaded', init);
+  window.addEventListener('yt-navigate-finish', () => {
+    processAllVideos();
+  });
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    init();
+  } else {
+    document.addEventListener('DOMContentLoaded', init);
+  }
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = { parseViewCount, hasBlockedKeyword };
 }

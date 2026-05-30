@@ -111,21 +111,19 @@ function getViewCount(item) {
   return null;
 }
 
+function parseDurationText(text) {
+  if (!text || text === 'LIVE') return null;
+  const parts = text.split(':').map(Number);
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  return null;
+}
+
 function getDuration(item) {
   const durationEl = item.querySelector('.yt-badge-shape__text') ||
                      item.querySelector('ytd-thumbnail-overlay-time-status-renderer span');
   if (!durationEl) return null;
-
-  const text = durationEl.textContent.trim();
-  if (text === 'LIVE') return null;
-
-  const parts = text.split(':').map(Number);
-  if (parts.length === 2) {
-    return parts[0] * 60 + parts[1];
-  } else if (parts.length === 3) {
-    return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  }
-  return null;
+  return parseDurationText(durationEl.textContent.trim());
 }
 
 function getVideoTitle(item) {
@@ -148,15 +146,16 @@ function isShort(item) {
   return false;
 }
 
-function hasBlockedKeyword(title) {
-  if (!config.blockedKeywords) return false;
+function hasBlockedKeyword(title, blockedKeywords = config.blockedKeywords) {
+  if (!blockedKeywords) return false;
 
-  const keywords = config.blockedKeywords
+  const lowerTitle = title.toLowerCase();
+  const keywords = blockedKeywords
     .split('\n')
     .map(k => k.trim().toLowerCase())
     .filter(k => k.length > 0);
 
-  return keywords.some(keyword => title.includes(keyword));
+  return keywords.some(keyword => lowerTitle.includes(keyword));
 }
 
 function processVideo(item) {
@@ -326,5 +325,5 @@ if (typeof window !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { parseViewCount, hasBlockedKeyword };
+  module.exports = { parseViewCount, parseDurationText, hasBlockedKeyword };
 }

@@ -14,8 +14,7 @@ let config = {
   hideAllShelves: false
 };
 
-function getVideoSelectorByPath() {
-  const path = window.location.pathname;
+function getVideoSelectorByPath(path = window.location.pathname) {
   if (path === '/') {
     return 'ytd-rich-item-renderer';
   } else if (path.startsWith('/results')) {
@@ -325,5 +324,5 @@ if (typeof window !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { parseViewCount, parseDurationText, hasBlockedKeyword };
+  module.exports = { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath };
 }

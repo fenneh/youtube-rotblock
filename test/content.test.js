@@ -1,6 +1,6 @@
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseViewCount, parseDurationText, hasBlockedKeyword } = require('../youtube-rotblock-content.js');
+const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath } = require('../youtube-rotblock-content.js');
 
 describe('parseViewCount', () => {
   test('returns null for falsy input', () => {
@@ -59,6 +59,36 @@ describe('parseDurationText', () => {
     assert.equal(parseDurationText('1:00:00'), 3600);
     assert.equal(parseDurationText('1:30:00'), 5400);
     assert.equal(parseDurationText('2:15:30'), 8130);
+  });
+});
+
+describe('getVideoSelectorByPath', () => {
+  test('home page', () => {
+    assert.equal(getVideoSelectorByPath('/'), 'ytd-rich-item-renderer');
+  });
+
+  test('search results', () => {
+    assert.equal(getVideoSelectorByPath('/results'), 'ytd-video-renderer');
+    assert.equal(getVideoSelectorByPath('/results?search_query=test'), 'ytd-video-renderer');
+  });
+
+  test('subscriptions feed', () => {
+    assert.equal(getVideoSelectorByPath('/feed/subscriptions'), 'ytd-rich-item-renderer');
+  });
+
+  test('channel pages', () => {
+    assert.equal(getVideoSelectorByPath('/@channelname'), 'ytd-rich-item-renderer');
+    assert.equal(getVideoSelectorByPath('/channel/UCxxx'), 'ytd-rich-item-renderer');
+  });
+
+  test('watch page', () => {
+    assert.equal(getVideoSelectorByPath('/watch'), 'ytd-compact-video-renderer, yt-lockup-view-model');
+    assert.equal(getVideoSelectorByPath('/watch?v=abc123'), 'ytd-compact-video-renderer, yt-lockup-view-model');
+  });
+
+  test('unknown path falls back to ytd-rich-item-renderer', () => {
+    assert.equal(getVideoSelectorByPath('/playlist'), 'ytd-rich-item-renderer');
+    assert.equal(getVideoSelectorByPath('/trending'), 'ytd-rich-item-renderer');
   });
 });
 

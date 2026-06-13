@@ -1,6 +1,6 @@
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath } = require('../youtube-rotblock-content.js');
+const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection } = require('../youtube-rotblock-content.js');
 
 describe('parseViewCount', () => {
   test('returns null for falsy input', () => {
@@ -119,5 +119,92 @@ describe('hasBlockedKeyword', () => {
   test('ignores blank lines in keyword list', () => {
     assert.equal(hasBlockedKeyword('cool video', '\n\n\n'), false);
     assert.equal(hasBlockedKeyword('cool video', '  \n  \n'), false);
+  });
+});
+
+function makeSection({ offsetHeight = 100, isShorts = false, hasShortLink = false, title = '' } = {}) {
+  return {
+    offsetHeight,
+    querySelector(sel) {
+      if (sel === '[is-shorts]') return isShorts ? {} : null;
+      if (sel === 'a[href*="/shorts/"]') return hasShortLink ? {} : null;
+      if (title && ['#title-text', '.ytd-rich-shelf-renderer #title', '[id="title"]'].includes(sel)) {
+        return { textContent: title };
+      }
+      return null;
+    }
+  };
+}
+
+const baseConfig = {
+  hideShorts: false,
+  hideAllShelves: false,
+  hideBreakingNews: false,
+  hideLatestPosts: false,
+  hideLatestVideos: false,
+  hidePeopleSearch: false,
+  hideExploreTopics: false,
+};
+
+describe('getSectionTitle', () => {
+  test('returns empty string when no title element found', () => {
+    assert.equal(getSectionTitle({ querySelector: () => null }), '');
+  });
+
+  test('returns lowercase trimmed title', () => {
+    const section = { querySelector: (sel) => sel === '#title-text' ? { textContent: '  Breaking News  ' } : null };
+    assert.equal(getSectionTitle(section), 'breaking news');
+  });
+
+  test('falls back through alternative selectors', () => {
+    const section = { querySelector: (sel) => sel === '[id="title"]' ? { textContent: 'Explore' } : null };
+    assert.equal(getSectionTitle(section), 'explore');
+  });
+});
+
+describe('shouldHideSection', () => {
+  test('hides sections with no visible content', () => {
+    assert.equal(shouldHideSection(makeSection({ offsetHeight: 0 }), baseConfig), true);
+    assert.equal(shouldHideSection(makeSection({ offsetHeight: 50 }), baseConfig), true);
+  });
+
+  test('shows visible section with no matching config', () => {
+    assert.equal(shouldHideSection(makeSection(), baseConfig), false);
+  });
+
+  test('hides shorts shelf when hideShorts is true', () => {
+    const cfg = { ...baseConfig, hideShorts: true };
+    assert.equal(shouldHideSection(makeSection({ isShorts: true }), cfg), true);
+    assert.equal(shouldHideSection(makeSection({ hasShortLink: true }), cfg), true);
+  });
+
+  test('does not hide shorts when hideShorts is false', () => {
+    assert.equal(shouldHideSection(makeSection({ isShorts: true }), baseConfig), false);
+  });
+
+  test('hides all shelves when hideAllShelves is true', () => {
+    assert.equal(shouldHideSection(makeSection(), { ...baseConfig, hideAllShelves: true }), true);
+  });
+
+  test('hides breaking news section', () => {
+    const cfg = { ...baseConfig, hideBreakingNews: true };
+    assert.equal(shouldHideSection(makeSection({ title: 'Breaking News' }), cfg), true);
+    assert.equal(shouldHideSection(makeSection({ title: 'Latest Videos' }), cfg), false);
+  });
+
+  test('hides latest posts section', () => {
+    assert.equal(shouldHideSection(makeSection({ title: 'Latest Posts' }), { ...baseConfig, hideLatestPosts: true }), true);
+  });
+
+  test('hides latest videos from section', () => {
+    assert.equal(shouldHideSection(makeSection({ title: 'Latest Videos from your subscriptions' }), { ...baseConfig, hideLatestVideos: true }), true);
+  });
+
+  test('hides people also search section', () => {
+    assert.equal(shouldHideSection(makeSection({ title: 'People also search for' }), { ...baseConfig, hidePeopleSearch: true }), true);
+  });
+
+  test('hides explore section', () => {
+    assert.equal(shouldHideSection(makeSection({ title: 'Explore' }), { ...baseConfig, hideExploreTopics: true }), true);
   });
 });

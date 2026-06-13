@@ -227,23 +227,23 @@ function getSectionTitle(section) {
   return (titleEl?.textContent || '').toLowerCase().trim();
 }
 
-function shouldHideSection(section) {
+function shouldHideSection(section, cfg = config) {
   const hasVisibleContent = section.offsetHeight > 50;
   if (!hasVisibleContent) return true;
 
   const isShorts = section.querySelector('[is-shorts]') ||
                    section.querySelector('a[href*="/shorts/"]');
-  if (config.hideShorts && isShorts) return true;
+  if (cfg.hideShorts && isShorts) return true;
 
-  if (config.hideAllShelves) return true;
+  if (cfg.hideAllShelves) return true;
 
   const title = getSectionTitle(section);
 
-  if (config.hideBreakingNews && title.includes('breaking news')) return true;
-  if (config.hideLatestPosts && title.includes('latest posts')) return true;
-  if (config.hideLatestVideos && title.includes('latest videos from')) return true;
-  if (config.hidePeopleSearch && title.includes('people also search')) return true;
-  if (config.hideExploreTopics && title.includes('explore')) return true;
+  if (cfg.hideBreakingNews && title.includes('breaking news')) return true;
+  if (cfg.hideLatestPosts && title.includes('latest posts')) return true;
+  if (cfg.hideLatestVideos && title.includes('latest videos from')) return true;
+  if (cfg.hidePeopleSearch && title.includes('people also search')) return true;
+  if (cfg.hideExploreTopics && title.includes('explore')) return true;
 
   return false;
 }
@@ -324,5 +324,5 @@ if (typeof window !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath };
+  module.exports = { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection };
 }

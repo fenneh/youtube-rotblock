@@ -1,6 +1,6 @@
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection } = require('../youtube-rotblock-content.js');
+const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort } = require('../youtube-rotblock-content.js');
 
 describe('parseViewCount', () => {
   test('returns null for falsy input', () => {
@@ -119,6 +119,37 @@ describe('hasBlockedKeyword', () => {
   test('ignores blank lines in keyword list', () => {
     assert.equal(hasBlockedKeyword('cool video', '\n\n\n'), false);
     assert.equal(hasBlockedKeyword('cool video', '  \n  \n'), false);
+  });
+});
+
+function makeItem({ inShortsShelf = false, hasShortsOverlay = false, hasShortsLink = false } = {}) {
+  return {
+    closest(sel) {
+      return sel === 'ytd-rich-shelf-renderer[is-shorts]' && inShortsShelf ? {} : null;
+    },
+    querySelector(sel) {
+      if (sel === 'ytd-thumbnail-overlay-time-status-renderer[overlay-style="SHORTS"]') return hasShortsOverlay ? {} : null;
+      if (sel === '[href*="/shorts/"]') return hasShortsLink ? {} : null;
+      return null;
+    }
+  };
+}
+
+describe('isShort', () => {
+  test('returns false for a regular video', () => {
+    assert.equal(isShort(makeItem()), false);
+  });
+
+  test('returns true when item is inside a shorts shelf', () => {
+    assert.equal(isShort(makeItem({ inShortsShelf: true })), true);
+  });
+
+  test('returns true when item has a shorts overlay badge', () => {
+    assert.equal(isShort(makeItem({ hasShortsOverlay: true })), true);
+  });
+
+  test('returns true when item contains a /shorts/ link', () => {
+    assert.equal(isShort(makeItem({ hasShortsLink: true })), true);
   });
 });
 

@@ -1,6 +1,6 @@
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort } = require('../youtube-rotblock-content.js');
+const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle } = require('../youtube-rotblock-content.js');
 
 describe('parseViewCount', () => {
   test('returns null for falsy input', () => {
@@ -237,5 +237,41 @@ describe('shouldHideSection', () => {
 
   test('hides explore section', () => {
     assert.equal(shouldHideSection(makeSection({ title: 'Explore' }), { ...baseConfig, hideExploreTopics: true }), true);
+  });
+});
+
+function makeVideoItem(matchSel, textContent = '', titleAttr = null) {
+  return {
+    querySelector(sel) {
+      if (sel === matchSel) {
+        return {
+          textContent,
+          getAttribute(attr) { return attr === 'title' ? titleAttr : null; }
+        };
+      }
+      return null;
+    }
+  };
+}
+
+describe('getVideoTitle', () => {
+  test('returns empty string when no title element found', () => {
+    assert.equal(getVideoTitle({ querySelector: () => null }), '');
+  });
+
+  test('returns lowercased textContent from #video-title', () => {
+    assert.equal(getVideoTitle(makeVideoItem('#video-title', 'My VIDEO')), 'my video');
+  });
+
+  test('falls back to a#video-title-link', () => {
+    assert.equal(getVideoTitle(makeVideoItem('a#video-title-link', 'Linked Title')), 'linked title');
+  });
+
+  test('uses title attribute when textContent is empty', () => {
+    assert.equal(getVideoTitle(makeVideoItem('[title]', '', 'Attr Title')), 'attr title');
+  });
+
+  test('falls back to h3 a', () => {
+    assert.equal(getVideoTitle(makeVideoItem('h3 a', 'H3 Title')), 'h3 title');
   });
 });

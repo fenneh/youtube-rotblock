@@ -1,6 +1,6 @@
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle } = require('../youtube-rotblock-content.js');
+const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration } = require('../youtube-rotblock-content.js');
 
 describe('parseViewCount', () => {
   test('returns null for falsy input', () => {
@@ -237,6 +237,81 @@ describe('shouldHideSection', () => {
 
   test('hides explore section', () => {
     assert.equal(shouldHideSection(makeSection({ title: 'Explore' }), { ...baseConfig, hideExploreTopics: true }), true);
+  });
+});
+
+function makeViewCountItem({ __data = undefined, data = undefined, elements = [] } = {}) {
+  const item = { querySelectorAll: (_sel) => elements };
+  if (__data !== undefined) item.__data = __data;
+  if (data !== undefined) item.data = data;
+  return item;
+}
+
+describe('getViewCount', () => {
+  test('returns null when no data and no matching elements', () => {
+    assert.equal(getViewCount(makeViewCountItem()), null);
+  });
+
+  test('reads from __data.data.viewCountText.simpleText', () => {
+    const item = makeViewCountItem({ __data: { data: { viewCountText: { simpleText: '1.5M views' } } } });
+    assert.equal(getViewCount(item), 1500000);
+  });
+
+  test('reads from data.shortViewCountText.simpleText', () => {
+    const item = makeViewCountItem({ data: { shortViewCountText: { simpleText: '10K views' } } });
+    assert.equal(getViewCount(item), 10000);
+  });
+
+  test('reads from a DOM element containing "views"', () => {
+    const item = makeViewCountItem({ elements: [{ textContent: '250K views' }] });
+    assert.equal(getViewCount(item), 250000);
+  });
+
+  test('reads from a DOM element containing "watching"', () => {
+    const item = makeViewCountItem({ elements: [{ textContent: '1.2M watching' }] });
+    assert.equal(getViewCount(item), 1200000);
+  });
+
+  test('skips elements without "views" or "watching" in text', () => {
+    const item = makeViewCountItem({ elements: [{ textContent: '2 days ago' }, { textContent: '99K views' }] });
+    assert.equal(getViewCount(item), 99000);
+  });
+
+  test('returns null when element text has no view/watching match', () => {
+    const item = makeViewCountItem({ elements: [{ textContent: '2 days ago' }] });
+    assert.equal(getViewCount(item), null);
+  });
+});
+
+function makeDurationItem({ badgeText = null, overlayText = null } = {}) {
+  return {
+    querySelector(sel) {
+      if (sel === '.yt-badge-shape__text') return badgeText !== null ? { textContent: badgeText } : null;
+      if (sel === 'ytd-thumbnail-overlay-time-status-renderer span') return overlayText !== null ? { textContent: overlayText } : null;
+      return null;
+    }
+  };
+}
+
+describe('getDuration', () => {
+  test('returns null when no duration element found', () => {
+    assert.equal(getDuration(makeDurationItem()), null);
+  });
+
+  test('returns duration from .yt-badge-shape__text', () => {
+    assert.equal(getDuration(makeDurationItem({ badgeText: '10:30' })), 630);
+  });
+
+  test('falls back to ytd-thumbnail-overlay-time-status-renderer span', () => {
+    assert.equal(getDuration(makeDurationItem({ overlayText: ' 2:00 ' })), 120);
+  });
+
+  test('returns null for LIVE content', () => {
+    assert.equal(getDuration(makeDurationItem({ badgeText: 'LIVE' })), null);
+  });
+
+  test('handles hh:mm:ss format', () => {
+    assert.equal(getDuration(makeDurationItem({ badgeText: '1:30:00' })), 5400);
   });
 });
 

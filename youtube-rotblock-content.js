@@ -158,40 +158,35 @@ function hasBlockedKeyword(title, blockedKeywords = config.blockedKeywords) {
 }
 
 function processVideo(item) {
-  const selector = getVideoSelectorByPath();
-  const container = item.closest(selector);
-  if (!container) return;
-
-  const viewCount = getViewCount(container);
-  const duration = getDuration(container);
-  const title = getVideoTitle(container);
-
-  if (config.hideShorts && isShort(container)) {
-    const shortsShelf = container.closest('ytd-rich-shelf-renderer[is-shorts]');
+  if (config.hideShorts && isShort(item)) {
+    const shortsShelf = item.closest('ytd-rich-shelf-renderer[is-shorts]');
     if (shortsShelf) {
       hideElement(shortsShelf);
     } else {
-      hideElement(container);
+      hideElement(item);
     }
     return;
   }
 
+  const title = getVideoTitle(item);
   if (hasBlockedKeyword(title)) {
-    hideElement(container);
+    hideElement(item);
     return;
   }
 
+  const viewCount = getViewCount(item);
   if (viewCount !== null && viewCount < config.minViews) {
-    hideElement(container);
+    hideElement(item);
     return;
   }
 
+  const duration = getDuration(item);
   if (duration !== null && duration < config.minDuration) {
-    hideElement(container);
+    hideElement(item);
     return;
   }
 
-  showElement(container);
+  showElement(item);
 }
 
 function processAllVideos() {

@@ -28,7 +28,7 @@
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/*"],
-      "js": ["youtube-rotblock-content.js"],
+      "js": ["youtube-rotblock-config.js", "youtube-rotblock-content.js"],
       "run_at": "document_idle"
     }
   ],

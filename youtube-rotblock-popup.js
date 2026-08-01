@@ -1,21 +1,7 @@
 const browser = globalThis.browser || globalThis.chrome;
 
-const defaultSettings = {
-  minViews: 10000,
-  minDuration: 120,
-  videosPerRow: 0,
-  blockedKeywords: '',
-  hideShorts: true,
-  hideBreakingNews: false,
-  hideLatestPosts: false,
-  hideLatestVideos: false,
-  hidePeopleSearch: false,
-  hideExploreTopics: false,
-  hideAllShelves: false
-};
-
 document.addEventListener('DOMContentLoaded', async () => {
-  const settings = await browser.storage.local.get(defaultSettings);
+  const settings = await browser.storage.local.get(DEFAULT_SETTINGS);
 
   document.getElementById('minViews').value = settings.minViews;
   document.getElementById('minDuration').value = settings.minDuration;

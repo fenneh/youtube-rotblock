@@ -1,18 +1,8 @@
+if (typeof require !== 'undefined') require('./youtube-rotblock-config.js');
+
 const browser = globalThis.browser || globalThis.chrome;
 
-let config = {
-  minViews: 10000,
-  minDuration: 120,
-  videosPerRow: 0,
-  blockedKeywords: '',
-  hideShorts: true,
-  hideBreakingNews: false,
-  hideLatestPosts: false,
-  hideLatestVideos: false,
-  hidePeopleSearch: false,
-  hideExploreTopics: false,
-  hideAllShelves: false
-};
+let config = { ...DEFAULT_SETTINGS };
 
 function getVideoSelectorByPath(path = window.location.pathname) {
   if (path === '/') {

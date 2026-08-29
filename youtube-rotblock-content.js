@@ -147,8 +147,8 @@ function hasBlockedKeyword(title, blockedKeywords = config.blockedKeywords) {
   return keywords.some(keyword => lowerTitle.includes(keyword));
 }
 
-function processVideo(item) {
-  if (config.hideShorts && isShort(item)) {
+function processVideo(item, cfg = config) {
+  if (cfg.hideShorts && isShort(item)) {
     const shortsShelf = item.closest('ytd-rich-shelf-renderer[is-shorts]');
     if (shortsShelf) {
       hideElement(shortsShelf);
@@ -159,19 +159,19 @@ function processVideo(item) {
   }
 
   const title = getVideoTitle(item);
-  if (hasBlockedKeyword(title)) {
+  if (hasBlockedKeyword(title, cfg.blockedKeywords)) {
     hideElement(item);
     return;
   }
 
   const viewCount = getViewCount(item);
-  if (viewCount !== null && viewCount < config.minViews) {
+  if (viewCount !== null && viewCount < cfg.minViews) {
     hideElement(item);
     return;
   }
 
   const duration = getDuration(item);
-  if (duration !== null && duration < config.minDuration) {
+  if (duration !== null && duration < cfg.minDuration) {
     hideElement(item);
     return;
   }
@@ -309,5 +309,5 @@ if (typeof window !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration };
+  module.exports = { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo };
 }

@@ -1,6 +1,6 @@
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration } = require('../youtube-rotblock-content.js');
+const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo } = require('../youtube-rotblock-content.js');
 
 describe('parseViewCount', () => {
   test('returns null for falsy input', () => {
@@ -348,5 +348,94 @@ describe('getVideoTitle', () => {
 
   test('falls back to h3 a', () => {
     assert.equal(getVideoTitle(makeVideoItem('h3 a', 'H3 Title')), 'h3 title');
+  });
+});
+
+function makeClassList() {
+  const classes = new Set();
+  return {
+    classes,
+    add: (c) => classes.add(c),
+    remove: (c) => classes.delete(c)
+  };
+}
+
+function makeProcessItem({
+  inShortsShelf = false,
+  shortsShelf = null,
+  hasShortsOverlay = false,
+  titleText = '',
+  __data = undefined,
+  durationText = null,
+  startHidden = false
+} = {}) {
+  const classList = makeClassList();
+  if (startHidden) classList.add('rotblock-hidden');
+  const item = {
+    classList,
+    closest(sel) {
+      return sel === 'ytd-rich-shelf-renderer[is-shorts]' && inShortsShelf ? shortsShelf : null;
+    },
+    querySelector(sel) {
+      if (sel === 'ytd-thumbnail-overlay-time-status-renderer[overlay-style="SHORTS"]') return hasShortsOverlay ? {} : null;
+      if (sel === '#video-title') return titleText ? { textContent: titleText, getAttribute: () => null } : null;
+      if (sel === '.yt-badge-shape__text') return durationText !== null ? { textContent: durationText } : null;
+      return null;
+    },
+    querySelectorAll: () => []
+  };
+  if (__data !== undefined) item.__data = __data;
+  return item;
+}
+
+const processConfig = { hideShorts: false, minViews: 0, minDuration: 0, blockedKeywords: '' };
+
+describe('processVideo', () => {
+  test('hides the item when it is a short and hideShorts is on', () => {
+    const item = makeProcessItem({ hasShortsOverlay: true });
+    processVideo(item, { ...processConfig, hideShorts: true });
+    assert.equal(item.classList.classes.has('rotblock-hidden'), true);
+  });
+
+  test('hides the shorts shelf instead of the item when nested in one', () => {
+    const shelf = { classList: makeClassList() };
+    const item = makeProcessItem({ inShortsShelf: true, shortsShelf: shelf, hasShortsOverlay: true });
+    processVideo(item, { ...processConfig, hideShorts: true });
+    assert.equal(shelf.classList.classes.has('rotblock-hidden'), true);
+    assert.equal(item.classList.classes.has('rotblock-hidden'), false);
+  });
+
+  test('does not treat shorts specially when hideShorts is off', () => {
+    const item = makeProcessItem({ hasShortsOverlay: true });
+    processVideo(item, processConfig);
+    assert.equal(item.classList.classes.has('rotblock-hidden'), false);
+  });
+
+  test('hides the item when the title matches a blocked keyword', () => {
+    const item = makeProcessItem({ titleText: 'my reaction video' });
+    processVideo(item, { ...processConfig, blockedKeywords: 'reaction' });
+    assert.equal(item.classList.classes.has('rotblock-hidden'), true);
+  });
+
+  test('hides the item when view count is below the threshold', () => {
+    const item = makeProcessItem({ __data: { data: { viewCountText: { simpleText: '500 views' } } } });
+    processVideo(item, { ...processConfig, minViews: 1000 });
+    assert.equal(item.classList.classes.has('rotblock-hidden'), true);
+  });
+
+  test('hides the item when duration is below the threshold', () => {
+    const item = makeProcessItem({ durationText: '0:10' });
+    processVideo(item, { ...processConfig, minDuration: 120 });
+    assert.equal(item.classList.classes.has('rotblock-hidden'), true);
+  });
+
+  test('shows a previously hidden item once it passes every check', () => {
+    const item = makeProcessItem({
+      titleText: 'cool video',
+      __data: { data: { viewCountText: { simpleText: '5000 views' } } },
+      startHidden: true
+    });
+    processVideo(item, { ...processConfig, minViews: 1000 });
+    assert.equal(item.classList.classes.has('rotblock-hidden'), false);
   });
 });

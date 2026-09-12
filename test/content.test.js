@@ -1,6 +1,6 @@
-const { test, describe } = require('node:test');
+const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo } = require('../youtube-rotblock-content.js');
+const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo, hideSections } = require('../youtube-rotblock-content.js');
 
 describe('parseViewCount', () => {
   test('returns null for falsy input', () => {
@@ -437,5 +437,90 @@ describe('processVideo', () => {
     });
     processVideo(item, { ...processConfig, minViews: 1000 });
     assert.equal(item.classList.classes.has('rotblock-hidden'), false);
+  });
+});
+
+function makeShelf({ isShorts = false, hasShortsLink = false, startHidden = false } = {}) {
+  const classList = makeClassList();
+  if (startHidden) classList.add('rotblock-hidden');
+  return {
+    classList,
+    hasAttribute: (attr) => attr === 'is-shorts' && isShorts,
+    querySelector: (sel) => (sel === 'a[href*="/shorts/"]' && hasShortsLink ? {} : null)
+  };
+}
+
+function makeChipShelf(text) {
+  return { classList: makeClassList(), textContent: text };
+}
+
+function makeFakeDocument({ sections = [], shelves = [], chipShelves = [] } = {}) {
+  return {
+    querySelectorAll(sel) {
+      if (sel === 'ytd-rich-grid-renderer #contents > ytd-rich-section-renderer') return sections;
+      if (sel === 'ytd-rich-shelf-renderer') return shelves;
+      if (sel === 'ytd-chips-shelf-with-video-shelf-renderer') return chipShelves;
+      return [];
+    }
+  };
+}
+
+describe('hideSections', () => {
+  let originalDocument;
+
+  beforeEach(() => {
+    originalDocument = globalThis.document;
+  });
+
+  afterEach(() => {
+    globalThis.document = originalDocument;
+  });
+
+  test('hides sections that shouldHideSection flags and shows the rest', () => {
+    const hidden = { ...makeSection({ offsetHeight: 0 }), classList: makeClassList() };
+    const visible = { ...makeSection({ offsetHeight: 100 }), classList: makeClassList() };
+    visible.classList.add('rotblock-hidden');
+    globalThis.document = makeFakeDocument({ sections: [hidden, visible] });
+
+    hideSections(baseConfig);
+
+    assert.equal(hidden.classList.classes.has('rotblock-hidden'), true);
+    assert.equal(visible.classList.classes.has('rotblock-hidden'), false);
+  });
+
+  test('hides shorts shelves when hideShorts is on', () => {
+    const shelf = makeShelf({ isShorts: true });
+    globalThis.document = makeFakeDocument({ shelves: [shelf] });
+
+    hideSections({ ...baseConfig, hideShorts: true });
+
+    assert.equal(shelf.classList.classes.has('rotblock-hidden'), true);
+  });
+
+  test('leaves shorts shelves alone when hideShorts is off', () => {
+    const shelf = makeShelf({ isShorts: true });
+    globalThis.document = makeFakeDocument({ shelves: [shelf] });
+
+    hideSections(baseConfig);
+
+    assert.equal(shelf.classList.classes.has('rotblock-hidden'), false);
+  });
+
+  test('hides explore chip shelves when hideExploreTopics is on', () => {
+    const chipShelf = makeChipShelf('Explore Gaming');
+    globalThis.document = makeFakeDocument({ chipShelves: [chipShelf] });
+
+    hideSections({ ...baseConfig, hideExploreTopics: true });
+
+    assert.equal(chipShelf.classList.classes.has('rotblock-hidden'), true);
+  });
+
+  test('does not query chip shelves when hideExploreTopics is off', () => {
+    const chipShelf = makeChipShelf('Explore Gaming');
+    globalThis.document = makeFakeDocument({ chipShelves: [chipShelf] });
+
+    hideSections(baseConfig);
+
+    assert.equal(chipShelf.classList.classes.has('rotblock-hidden'), false);
   });
 });

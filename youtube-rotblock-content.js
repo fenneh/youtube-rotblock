@@ -233,9 +233,9 @@ function shouldHideSection(section, cfg = config) {
   return false;
 }
 
-function hideSections() {
+function hideSections(cfg = config) {
   document.querySelectorAll('ytd-rich-grid-renderer #contents > ytd-rich-section-renderer').forEach(section => {
-    if (shouldHideSection(section)) {
+    if (shouldHideSection(section, cfg)) {
       hideElement(section);
     } else {
       showElement(section);
@@ -244,12 +244,12 @@ function hideSections() {
 
   document.querySelectorAll('ytd-rich-shelf-renderer').forEach(shelf => {
     const isShorts = shelf.hasAttribute('is-shorts') || shelf.querySelector('a[href*="/shorts/"]');
-    if (config.hideShorts && isShorts) {
+    if (cfg.hideShorts && isShorts) {
       hideElement(shelf);
     }
   });
 
-  if (config.hideExploreTopics) {
+  if (cfg.hideExploreTopics) {
     document.querySelectorAll('ytd-chips-shelf-with-video-shelf-renderer').forEach(shelf => {
       const text = shelf.textContent?.toLowerCase() || '';
       if (text.includes('explore')) {
@@ -309,5 +309,5 @@ if (typeof window !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo };
+  module.exports = { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo, hideSections };
 }

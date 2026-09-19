@@ -1,6 +1,6 @@
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo, hideSections } = require('../youtube-rotblock-content.js');
+const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo, hideSections, refreshYouTubeGrid } = require('../youtube-rotblock-content.js');
 
 describe('parseViewCount', () => {
   test('returns null for falsy input', () => {
@@ -522,5 +522,51 @@ describe('hideSections', () => {
     hideSections(baseConfig);
 
     assert.equal(chipShelf.classList.classes.has('rotblock-hidden'), false);
+  });
+});
+
+function makeGrid() {
+  const properties = new Map();
+  return {
+    properties,
+    style: {
+      setProperty: (name, value) => properties.set(name, value),
+      removeProperty: (name) => properties.delete(name)
+    }
+  };
+}
+
+describe('refreshYouTubeGrid', () => {
+  let originalDocument;
+
+  beforeEach(() => {
+    originalDocument = globalThis.document;
+  });
+
+  afterEach(() => {
+    globalThis.document = originalDocument;
+  });
+
+  test('sets per-row custom properties on every grid when videosPerRow is positive', () => {
+    const grid = makeGrid();
+    globalThis.document = { querySelectorAll: (sel) => sel === 'ytd-rich-grid-renderer' ? [grid] : [] };
+
+    refreshYouTubeGrid({ videosPerRow: 4 });
+
+    assert.equal(grid.properties.get('--ytd-rich-grid-items-per-row'), 4);
+    assert.equal(grid.properties.get('--ytd-rich-grid-posts-per-row'), 4);
+    assert.equal(grid.properties.get('--ytd-rich-grid-slim-items-per-row'), 5);
+    assert.equal(grid.properties.get('--ytd-rich-grid-game-cards-per-row'), 5);
+    assert.equal(grid.properties.get('--ytd-rich-grid-mini-game-cards-per-row'), 4);
+  });
+
+  test('removes custom properties when videosPerRow is 0', () => {
+    const grid = makeGrid();
+    grid.properties.set('--ytd-rich-grid-items-per-row', 4);
+    globalThis.document = { querySelectorAll: (sel) => sel === 'ytd-rich-grid-renderer' ? [grid] : [] };
+
+    refreshYouTubeGrid({ videosPerRow: 0 });
+
+    assert.equal(grid.properties.has('--ytd-rich-grid-items-per-row'), false);
   });
 });

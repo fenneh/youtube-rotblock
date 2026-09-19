@@ -185,8 +185,8 @@ function processAllVideos() {
   refreshYouTubeGrid();
 }
 
-function refreshYouTubeGrid() {
-  const videosPerRow = config.videosPerRow;
+function refreshYouTubeGrid(cfg = config) {
+  const videosPerRow = cfg.videosPerRow;
 
   document.querySelectorAll('ytd-rich-grid-renderer').forEach(grid => {
     if (videosPerRow > 0) {
@@ -309,5 +309,5 @@ if (typeof window !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo, hideSections };
+  module.exports = { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo, hideSections, refreshYouTubeGrid };
 }

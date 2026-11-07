@@ -180,7 +180,7 @@ function processVideo(item, cfg = config) {
 }
 
 function processAllVideos() {
-  findAllVideos().forEach(processVideo);
+  findAllVideos().forEach(item => processVideo(item));
   hideSections();
   refreshYouTubeGrid();
 }
@@ -309,5 +309,5 @@ if (typeof window !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo, hideSections, refreshYouTubeGrid };
+  module.exports = { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo, processAllVideos, hideSections, refreshYouTubeGrid };
 }

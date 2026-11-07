@@ -1,6 +1,6 @@
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo, hideSections, refreshYouTubeGrid } = require('../youtube-rotblock-content.js');
+const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo, processAllVideos, hideSections, refreshYouTubeGrid } = require('../youtube-rotblock-content.js');
 
 describe('parseViewCount', () => {
   test('returns null for falsy input', () => {
@@ -437,6 +437,36 @@ describe('processVideo', () => {
     });
     processVideo(item, { ...processConfig, minViews: 1000 });
     assert.equal(item.classList.classes.has('rotblock-hidden'), false);
+  });
+});
+
+describe('processAllVideos', () => {
+  let originalDocument;
+  let originalWindow;
+
+  beforeEach(() => {
+    originalDocument = globalThis.document;
+    originalWindow = globalThis.window;
+  });
+
+  afterEach(() => {
+    globalThis.document = originalDocument;
+    globalThis.window = originalWindow;
+  });
+
+  test('applies the configured filters to every video in the feed', () => {
+    const lowViews = makeProcessItem({ __data: { data: { viewCountText: { simpleText: '500 views' } } } });
+    const enoughViews = makeProcessItem({ __data: { data: { viewCountText: { simpleText: '50K views' } } } });
+
+    globalThis.window = { location: { pathname: '/' } };
+    globalThis.document = {
+      querySelectorAll: (sel) => sel === 'ytd-rich-item-renderer' ? [lowViews, enoughViews] : []
+    };
+
+    processAllVideos();
+
+    assert.equal(lowViews.classList.classes.has('rotblock-hidden'), true);
+    assert.equal(enoughViews.classList.classes.has('rotblock-hidden'), false);
   });
 });
 

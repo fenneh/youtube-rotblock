@@ -1,6 +1,12 @@
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo, processAllVideos, hideSections, refreshYouTubeGrid } = require('../youtube-rotblock-content.js');
+
+const browserMock = {
+  storage: { local: { get: async (defaults) => ({ ...defaults }) } }
+};
+globalThis.browser = browserMock;
+
+const { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo, processAllVideos, hideSections, refreshYouTubeGrid, loadSettings, findAllVideos, injectStyles } = require('../youtube-rotblock-content.js');
 
 describe('parseViewCount', () => {
   test('returns null for falsy input', () => {
@@ -598,5 +604,123 @@ describe('refreshYouTubeGrid', () => {
     refreshYouTubeGrid({ videosPerRow: 0 });
 
     assert.equal(grid.properties.has('--ytd-rich-grid-items-per-row'), false);
+  });
+});
+
+describe('loadSettings', () => {
+  beforeEach(async () => {
+    browserMock.storage.local.get = async () => ({ ...DEFAULT_SETTINGS });
+    await loadSettings();
+  });
+
+  test('reads stored settings using the defaults as a fallback', async () => {
+    let requestedDefaults;
+    browserMock.storage.local.get = async (defaults) => {
+      requestedDefaults = defaults;
+      return { ...defaults, minViews: 5000 };
+    };
+
+    assert.equal(await loadSettings(), true);
+    assert.deepEqual(requestedDefaults, DEFAULT_SETTINGS);
+  });
+
+  test('applies the loaded settings to filtering', async () => {
+    browserMock.storage.local.get = async (defaults) => ({ ...defaults, minViews: 5000 });
+
+    await loadSettings();
+
+    const item = makeProcessItem({ __data: { data: { viewCountText: { simpleText: '1000 views' } } } });
+    processVideo(item);
+    assert.equal(item.classList.classes.has('rotblock-hidden'), true);
+  });
+
+  test('returns false and keeps the previous settings when storage read fails', async () => {
+    browserMock.storage.local.get = async () => { throw new Error('storage unavailable'); };
+
+    assert.equal(await loadSettings(), false);
+
+    const item = makeProcessItem({ __data: { data: { viewCountText: { simpleText: '5000 views' } } } });
+    processVideo(item);
+    assert.equal(item.classList.classes.has('rotblock-hidden'), true);
+  });
+});
+
+describe('findAllVideos', () => {
+  let originalDocument;
+  let originalWindow;
+
+  beforeEach(() => {
+    originalDocument = globalThis.document;
+    originalWindow = globalThis.window;
+  });
+
+  afterEach(() => {
+    globalThis.document = originalDocument;
+    globalThis.window = originalWindow;
+  });
+
+  test('queries the selector for the current path and returns every match', () => {
+    const items = [{}, {}];
+    let requestedSelector;
+    globalThis.window = { location: { pathname: '/results' } };
+    globalThis.document = {
+      querySelectorAll: (sel) => { requestedSelector = sel; return items; }
+    };
+
+    assert.deepEqual(findAllVideos(), items);
+    assert.equal(requestedSelector, 'ytd-video-renderer');
+  });
+
+  test('uses the feed selector on the homepage', () => {
+    let requestedSelector;
+    globalThis.window = { location: { pathname: '/' } };
+    globalThis.document = {
+      querySelectorAll: (sel) => { requestedSelector = sel; return []; }
+    };
+
+    findAllVideos();
+    assert.equal(requestedSelector, 'ytd-rich-item-renderer');
+  });
+});
+
+describe('injectStyles', () => {
+  let originalDocument;
+
+  function makeStyleDocument(existing) {
+    const appended = [];
+    return {
+      appended,
+      getElementById: (id) => (id === 'rotblock-styles' ? existing : null),
+      createElement: (tag) => ({ tag, id: '', textContent: '' }),
+      head: { appendChild: (el) => appended.push(el) }
+    };
+  }
+
+  beforeEach(() => {
+    originalDocument = globalThis.document;
+  });
+
+  afterEach(() => {
+    globalThis.document = originalDocument;
+  });
+
+  test('appends the hidden-class stylesheet to the head', () => {
+    const doc = makeStyleDocument(null);
+    globalThis.document = doc;
+
+    injectStyles();
+
+    assert.equal(doc.appended.length, 1);
+    assert.equal(doc.appended[0].id, 'rotblock-styles');
+    assert.match(doc.appended[0].textContent, /\.rotblock-hidden/);
+  });
+
+  test('does not inject a second stylesheet', () => {
+    const doc = makeStyleDocument({ id: 'rotblock-styles' });
+    globalThis.document = doc;
+
+    injectStyles();
+
+    assert.equal(doc.appended.length, 0);
   });
 });

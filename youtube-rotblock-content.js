@@ -309,5 +309,5 @@ if (typeof window !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo, processAllVideos, hideSections, refreshYouTubeGrid };
+  module.exports = { parseViewCount, parseDurationText, hasBlockedKeyword, getVideoSelectorByPath, getSectionTitle, shouldHideSection, isShort, getVideoTitle, getViewCount, getDuration, processVideo, processAllVideos, hideSections, refreshYouTubeGrid, loadSettings, findAllVideos, injectStyles };
 }

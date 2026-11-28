@@ -62,10 +62,10 @@ function showElement(el) {
 
 function parseViewCount(text) {
   if (!text) return null;
-  const match = text.match(/([\d,.]+)\s*([KMB]?)/i);
+  const match = text.match(/([\d][\d.,\s]*)\s*(?:([KMB])\b)?/i);
   if (!match) return null;
-  const num = parseFloat(match[1].replace(/,/g, ''));
-  const suffix = match[2].toUpperCase();
+  const num = parseFloat(match[1].replace(/[\s,]/g, ''));
+  const suffix = (match[2] || '').toUpperCase();
   const multiplier = suffix === 'K' ? 1000 : suffix === 'M' ? 1000000 : suffix === 'B' ? 1000000000 : 1;
   return Math.floor(num * multiplier);
 }

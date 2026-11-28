@@ -26,6 +26,12 @@ describe('parseViewCount', () => {
     assert.equal(parseViewCount('1,234,567 views'), 1234567);
   });
 
+  test('numbers grouped with spaces', () => {
+    assert.equal(parseViewCount('1 234 views'), 1234);
+    assert.equal(parseViewCount('707 624 katselukertaa'), 707624);
+    assert.equal(parseViewCount('1 234 567 vues'), 1234567);
+  });
+
   test('K suffix', () => {
     assert.equal(parseViewCount('10K views'), 10000);
     assert.equal(parseViewCount('1.5K views'), 1500);
